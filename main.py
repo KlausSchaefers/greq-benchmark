@@ -84,8 +84,22 @@ def run_grep(query: str, filepattern: str) -> list[dict]:
         list[dict]: The result of the grep command in structured format
     """
     try:
-        # Use shell=True to allow glob expansion, just like command line
-        command = f'grep -i -n "{query}" {filepattern}'
+        # Build an OR-regex from space-separated query terms and
+        # pass it to grep. Use shell=True to allow glob expansion.
+        # Split by literal space as requested.
+        parts = [p for p in query.split(" ") if p != ""]
+        if not parts:
+            return []
+
+        # Escape regex-special characters in each part
+        escaped = [re.escape(p) for p in parts]
+        pattern = "|".join(escaped)
+
+        # Protect double quotes in the pattern for shell interpolation
+        pattern_for_shell = pattern.replace('"', '\\"')
+        print(f"Running grep with pattern: {pattern_for_shell} on files: {filepattern}")
+
+        command = f'grep -Ei -n --color "{pattern_for_shell}" {filepattern}'
         result = subprocess.run(
             command,
             shell=True,
@@ -101,7 +115,7 @@ def run_grep(query: str, filepattern: str) -> list[dict]:
 
 def main():
     print("Hello from greq-benchmark!")
-    res = run_grep("Karate", "./data/sport/*.txt")
+    res = run_grep("Karate Okinawan", "./data/sport/*")
     print('Result of grep command:', json.dumps(res, indent=2))
 
     # res = run_greq("Karate", "./data/sport/*.txt")
