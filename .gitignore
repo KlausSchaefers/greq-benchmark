@@ -6,6 +6,12 @@ __pycache__/
 # C extensions
 *.so
 
+#greq
+/bin/greq
+
+# data
+/data/food/*.md
+
 # Distribution / packaging
 .Python
 build/
